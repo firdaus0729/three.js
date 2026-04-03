@@ -1,6 +1,4 @@
-"use client";
-
-import dynamic from "next/dynamic";
+import { Suspense, lazy } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { CircularGauge } from "@/components/CircularGauge";
 import { EventTimeline } from "@/components/EventTimeline";
@@ -9,12 +7,8 @@ import { useSimulationEngine } from "@/hooks/useSimulationEngine";
 import { usePlaybackScrubber } from "@/hooks/usePlaybackScrubber";
 import { useDashboardStore } from "@/store/dashboardStore";
 
-const SphereViewport = dynamic(
-  () =>
-    import("@/components/SphereViewport").then((m) => ({
-      default: m.SphereViewport,
-    })),
-  { ssr: false, loading: () => <SphereLoading /> }
+const SphereViewport = lazy(() =>
+  import("@/components/SphereViewport").then((m) => ({ default: m.SphereViewport }))
 );
 
 function SphereLoading() {
@@ -41,7 +35,9 @@ function DashboardBody() {
           <CircularGauge label="Intensity" value={intensity} className="w-full max-w-[240px]" />
         </div>
         <div className="lg:col-span-6">
-          <SphereViewport />
+          <Suspense fallback={<SphereLoading />}>
+            <SphereViewport />
+          </Suspense>
         </div>
         <div className="flex justify-center lg:col-span-3 lg:justify-start">
           <CircularGauge label="Effort" value={effort} className="w-full max-w-[240px]" />

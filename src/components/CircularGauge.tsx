@@ -1,5 +1,3 @@
-"use client";
-
 import { useId } from "react";
 import { useAnimatedGaugeValue } from "@/hooks/useAnimatedGaugeValue";
 import { gaugeColor } from "@/lib/colors";

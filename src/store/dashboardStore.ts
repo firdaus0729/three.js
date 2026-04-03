@@ -1,12 +1,10 @@
-"use client";
-
 import { create } from "zustand";
 import {
   createInitialSimulation,
   simulationTick,
   type SimulationState,
 } from "@/lib/simulation";
-import type { EventType, MetricSnapshot, TimelineEvent } from "@/lib/types";
+import type { EventType, TimelineEvent } from "@/lib/types";
 
 let eventId = 0;
 
@@ -53,7 +51,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   sim: createInitialSimulation(),
 
   tick: () => {
-    const now = performance.now();
     const s = get();
     const interval = 500 + Math.random() * 500;
     const { snapshot, type } = simulationTick(s.sim, interval);

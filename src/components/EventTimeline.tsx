@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { EVENT_LABELS, type EventType } from "@/lib/types";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useDashboardStore } from "@/store/dashboardStore";
 import { EVENT_LABELS } from "@/lib/types";
 
