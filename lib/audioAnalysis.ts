@@ -6,6 +6,10 @@ export interface LiveFeatureState {
   smoothedRms: number;
   smoothedFlux: number;
   prevRms: number;
+  prevIntensity: number;
+  prevEffort: number;
+  dynamicFloor: number;
+  dynamicCeil: number;
   apneaCooldown: number;
 }
 
@@ -14,6 +18,10 @@ export function createLiveFeatureState(): LiveFeatureState {
     smoothedRms: 0,
     smoothedFlux: 0,
     prevRms: 0,
+    prevIntensity: 0,
+    prevEffort: 0,
+    dynamicFloor: 0.06,
+    dynamicCeil: 0.45,
     apneaCooldown: 0,
   };
 }
@@ -67,22 +75,41 @@ export function classifyFromFeatures(
   tonality: number,
   state: LiveFeatureState
 ): EventType {
-  const i = snapshot.intensity;
-  const e = snapshot.effort;
-  const flux = Math.abs(i - state.prevRms);
+  const iRaw = snapshot.intensity;
+  const eRaw = snapshot.effort;
+  state.smoothedRms = state.smoothedRms * 0.86 + iRaw * 0.14;
+
+  // Adaptive normalization so low-level recordings still show dynamic behavior.
+  state.dynamicFloor = state.dynamicFloor * 0.995 + (state.smoothedRms / 100) * 0.005;
+  const targetCeil = Math.max(state.dynamicFloor + 0.18, (iRaw + eRaw) / 200 + 0.08);
+  state.dynamicCeil = state.dynamicCeil * 0.985 + targetCeil * 0.015;
+  const range = Math.max(0.08, state.dynamicCeil - state.dynamicFloor);
+
+  const i = clamp01((iRaw / 100 - state.dynamicFloor) / range) * 100;
+  const e = clamp01((eRaw / 100 - state.dynamicFloor) / range) * 100;
+  snapshot.intensity = Math.round((i * 0.7 + Math.abs(i - state.prevIntensity) * 0.6) * 10) / 10;
+  snapshot.effort = Math.round((e * 0.75 + Math.abs(e - state.prevEffort) * 0.55) * 10) / 10;
+  state.prevIntensity = snapshot.intensity;
+  state.prevEffort = snapshot.effort;
+
+  const flux = Math.abs(snapshot.intensity - state.prevRms);
   state.smoothedFlux = state.smoothedFlux * 0.8 + flux * 0.2;
-  state.prevRms = i;
+  state.prevRms = snapshot.intensity;
   if (state.apneaCooldown > 0) state.apneaCooldown -= 1;
 
   const apneaLike =
-    i < 18 && e > 45 && tonality < 0.55 && state.smoothedFlux < 3.8 && state.apneaCooldown <= 0;
+    snapshot.intensity < 14 &&
+    snapshot.effort > 52 &&
+    tonality < 0.52 &&
+    state.smoothedFlux < 3.2 &&
+    state.apneaCooldown <= 0;
   if (apneaLike) {
     state.apneaCooldown = 8;
     return "breathing_interruption";
   }
 
-  if (i > 70 && e > 52 && tonality > 0.5) return "heavy_snore";
-  if (i > 42 && tonality > 0.45) return "slow_snore";
+  if (snapshot.intensity > 74 && snapshot.effort > 58 && tonality > 0.48) return "heavy_snore";
+  if (snapshot.intensity > 46 && tonality > 0.42) return "slow_snore";
   return "normal_breathing";
 }
 

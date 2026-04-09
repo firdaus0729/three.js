@@ -8,7 +8,7 @@ import {
 } from "@/lib/audioAnalysis";
 import { useDashboardStore } from "@/store/dashboardStore";
 
-const SAMPLE_INTERVAL_MS = 700;
+const SAMPLE_INTERVAL_MS = 220;
 
 export function useMediaAnalysisEngine(file: File | null) {
   const playbackRate = useDashboardStore((s) => s.playbackRate);
@@ -25,6 +25,7 @@ export function useMediaAnalysisEngine(file: File | null) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const urlRef = useRef<string | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastSampleRef = useRef<number>(-1);
@@ -38,7 +39,8 @@ export function useMediaAnalysisEngine(file: File | null) {
     media.preload = "metadata";
     media.crossOrigin = "anonymous";
     media.controls = false;
-    media.muted = true;
+    media.muted = false;
+    media.volume = 1;
     media.setAttribute("playsinline", "true");
     media.style.display = "none";
     document.body.appendChild(media);
@@ -81,11 +83,13 @@ export function useMediaAnalysisEngine(file: File | null) {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       if (sourceNodeRef.current) sourceNodeRef.current.disconnect();
       if (analyserRef.current) analyserRef.current.disconnect();
+      if (gainNodeRef.current) gainNodeRef.current.disconnect();
       if (audioCtxRef.current) {
         void audioCtxRef.current.close();
       }
       sourceNodeRef.current = null;
       analyserRef.current = null;
+      gainNodeRef.current = null;
       audioCtxRef.current = null;
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       urlRef.current = null;
@@ -110,14 +114,18 @@ export function useMediaAnalysisEngine(file: File | null) {
           if (!audioCtxRef.current) {
             const ctx = new AudioContext();
             const analyser = ctx.createAnalyser();
+            const silentOut = ctx.createGain();
+            silentOut.gain.value = 0;
             analyser.fftSize = 2048;
-            analyser.smoothingTimeConstant = 0.68;
+            analyser.smoothingTimeConstant = 0.32;
             const source = ctx.createMediaElementSource(media);
             source.connect(analyser);
-            analyser.connect(ctx.destination);
+            analyser.connect(silentOut);
+            silentOut.connect(ctx.destination);
             audioCtxRef.current = ctx;
             analyserRef.current = analyser;
             sourceNodeRef.current = source;
+            gainNodeRef.current = silentOut;
           }
           if (audioCtxRef.current.state === "suspended") {
             await audioCtxRef.current.resume();

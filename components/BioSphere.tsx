@@ -11,6 +11,7 @@ export function BioSphere() {
   const meshRef = useRef<Mesh>(null);
   const intensity = useDashboardStore((s) => s.intensity);
   const effort = useDashboardStore((s) => s.effort);
+  const eventType = useDashboardStore((s) => s.eventType);
 
   const color = useMemo(
     () => combinedStressRgb(intensity, effort),
@@ -22,11 +23,25 @@ export function BioSphere() {
     if (!m) return;
     const live = useDashboardStore.getState();
     const i = live.intensity;
+    const e = live.effort;
     m.rotation.y += delta * 0.35;
     m.rotation.x = Math.sin(state.clock.elapsedTime * 0.4) * 0.12;
-    const pulse = 1 + (i / 100) * 0.08 + Math.sin(state.clock.elapsedTime * 2.2) * 0.02;
+    const pulse =
+      1 +
+      (i / 100) * 0.16 +
+      (e / 100) * 0.08 +
+      Math.sin(state.clock.elapsedTime * 2.8) * 0.055;
     m.scale.setScalar(pulse);
   });
+
+  const alertBoost =
+    eventType === "breathing_interruption"
+      ? 0.26
+      : eventType === "heavy_snore"
+        ? 0.14
+        : eventType === "slow_snore"
+          ? 0.08
+          : 0;
 
   return (
     <mesh ref={meshRef}>
@@ -34,11 +49,11 @@ export function BioSphere() {
       <MeshDistortMaterial
         color={color}
         emissive={color}
-        emissiveIntensity={0.35 + intensity / 250}
-        roughness={0.25}
-        metalness={0.55}
-        distort={0.18 + effort / 400}
-        speed={1.2 + intensity / 120}
+        emissiveIntensity={0.35 + intensity / 170 + alertBoost}
+        roughness={0.2}
+        metalness={0.62}
+        distort={0.08 + effort / 120 + alertBoost * 0.9}
+        speed={1.4 + intensity / 45 + alertBoost * 3}
       />
     </mesh>
   );
