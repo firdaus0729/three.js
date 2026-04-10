@@ -182,7 +182,13 @@ export function useMediaAnalysisEngine(file: File | null) {
           intensity: Math.round(features.intensity * 10) / 10,
           effort: Math.round(features.effort * 10) / 10,
         };
-        const type = classifyFromFeatures(snapshot, features.tonality, featureState);
+        const type = classifyFromFeatures(snapshot, features.tonality, featureState, {
+          rawIntensity: features.rawIntensity,
+          rawEffort: features.rawEffort,
+          rms: features.rms,
+          zcrNorm: features.zcrNorm,
+          lowRatio: features.lowRatio,
+        });
         ingestExternalSample(nowMs, snapshot, type);
         lastSampleRef.current = nowMs;
       }

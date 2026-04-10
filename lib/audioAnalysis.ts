@@ -4,46 +4,42 @@ import type { EventType, MetricSnapshot } from "@/lib/types";
 import { CALIBRATION_PROFILE } from "@/lib/calibrationProfile";
 
 export interface LiveFeatureState {
-  smoothedRms: number;
-  smoothedFlux: number;
-  prevRms: number;
-  prevIntensity: number;
-  prevEffort: number;
-  baselineIntensity: number;
-  baselineEffort: number;
-  dynamicFloor: number;
-  dynamicCeil: number;
+  /** Raw intensity from extractSignalFeatures (0–100), not adaptive-normalized */
+  baselineRawIntensity: number;
+  baselineRawEffort: number;
+  /** Session noise floor (EMA of quiet moments) for relative silence */
+  noiseFloorRaw: number;
+  /** Peak tracker for dynamic range */
+  peakRawIntensity: number;
+  /** Slow EMA of RMS — typical “ventilation” level for relative hypopnea */
+  rmsBaseline: number;
+  /** Tracks quiet RMS (rises slowly) for apnea vs reduced-flow band */
+  rmsQuietFloor: number;
   apneaSamples: number;
   hypopneaSamples: number;
+  /** Brief non-silence tolerance inside apnea streak (samples) */
+  apneaGraceLeft: number;
   lastEvent: EventType;
   lastSwitchCooldown: number;
-}
-
-interface SimilarityCandidate {
-  type:
-    | "normal_breathing"
-    | "difficult_breathing"
-    | "mild_snore"
-    | "moderate_snore"
-    | "loud_snore";
-  score: number;
+  prevIntensityRaw: number;
+  prevEffortRaw: number;
 }
 
 export function createLiveFeatureState(): LiveFeatureState {
   return {
-    smoothedRms: 0,
-    smoothedFlux: 0,
-    prevRms: 0,
-    prevIntensity: 0,
-    prevEffort: 0,
-    baselineIntensity: 40,
-    baselineEffort: 36,
-    dynamicFloor: 0.06,
-    dynamicCeil: 0.45,
+    baselineRawIntensity: 28,
+    baselineRawEffort: 32,
+    noiseFloorRaw: 0.08,
+    peakRawIntensity: 35,
+    rmsBaseline: 0.04,
+    rmsQuietFloor: 0.015,
     apneaSamples: 0,
     hypopneaSamples: 0,
+    apneaGraceLeft: 0,
     lastEvent: "normal_breathing",
     lastSwitchCooldown: 0,
+    prevIntensityRaw: 28,
+    prevEffortRaw: 32,
   };
 }
 
@@ -51,25 +47,22 @@ function clamp01(v: number) {
   return Math.max(0, Math.min(1, v));
 }
 
-function matchSimilarityCategory(intensity: number, effort: number, tonality: number): SimilarityCandidate {
-  const p = CALIBRATION_PROFILE.prototypes;
-  const candidates: SimilarityCandidate[] = (Object.keys(p) as Array<keyof typeof p>).map((key) => {
-    const proto = p[key];
-    const di = Math.abs(intensity - proto.intensityMean) / Math.max(6, proto.intensityStd);
-    const de = Math.abs(effort - proto.effortHint) / 22;
-    const dt = Math.abs(tonality - proto.tonalityHint) / 0.28;
-    // Weighted L1 distance: amplitude dominates, then effort, then tonal balance.
-    const score = di * 0.62 + de * 0.26 + dt * 0.12;
-    return { type: key, score };
-  });
-  candidates.sort((a, b) => a.score - b.score);
-  return candidates[0]!;
+export interface ExtractedFeatures {
+  intensity: number;
+  effort: number;
+  tonality: number;
+  /** Same scale as intensity/effort, pre-display-smoothing */
+  rawIntensity: number;
+  rawEffort: number;
+  rms: number;
+  zcrNorm: number;
+  lowRatio: number;
 }
 
 export function extractSignalFeatures(
   timeDomain: Uint8Array,
   freqDomain: Uint8Array
-): { intensity: number; effort: number; tonality: number } {
+): ExtractedFeatures {
   let sumSq = 0;
   let zcr = 0;
   let prev = 128;
@@ -100,16 +93,34 @@ export function extractSignalFeatures(
   const highRatio = high / total;
   const tonalRatio = clamp01((lowRatio * 1.2 + (1 - highRatio) * 0.6) / 1.8);
 
-  const intensity = clamp01(rms * 3.8 + lowRatio * 0.55 + (1 - zcrNorm) * 0.2) * 100;
-  const effort = clamp01(rms * 2.3 + zcrNorm * 0.55 + (1 - lowRatio) * 0.25) * 100;
+  const rawIntensity = clamp01(rms * 3.8 + lowRatio * 0.55 + (1 - zcrNorm) * 0.2) * 100;
+  const rawEffort = clamp01(rms * 2.3 + zcrNorm * 0.55 + (1 - lowRatio) * 0.25) * 100;
 
-  return { intensity, effort, tonality: tonalRatio };
+  return {
+    intensity: rawIntensity,
+    effort: rawEffort,
+    tonality: tonalRatio,
+    rawIntensity,
+    rawEffort,
+    rms,
+    zcrNorm,
+    lowRatio,
+  };
+}
+
+/**
+ * Strict snore spectral signature — normal speech/breath often fails this,
+ * so we do not label every low–mid-heavy frame as snoring.
+ */
+function isStrictSnoreSpectrum(tonality: number, lowRatio: number, zcrNorm: number): boolean {
+  return lowRatio > 0.34 && tonality > 0.44 && zcrNorm < 0.68;
 }
 
 export function classifyFromFeatures(
   snapshot: MetricSnapshot,
   tonality: number,
-  state: LiveFeatureState
+  state: LiveFeatureState,
+  raw: Pick<ExtractedFeatures, "rawIntensity" | "rawEffort" | "rms" | "zcrNorm" | "lowRatio">
 ): EventType {
   const SAMPLE_INTERVAL_MS = 220;
   const APNEA_MIN_MS = CALIBRATION_PROFILE.durationsMs.apneaMin;
@@ -118,82 +129,115 @@ export function classifyFromFeatures(
   const hypopneaMinSamples = Math.ceil(HYPOPNEA_MIN_MS / SAMPLE_INTERVAL_MS);
   const t = CALIBRATION_PROFILE.thresholds;
 
-  const normalMax = t.normalMax;
-  const mildMin = t.mildSnoreMin;
-  const moderateMin = Math.max(t.moderateSnoreMin, mildMin + 6);
-  const loudMin = Math.max(t.loudSnoreMin, moderateMin + 6);
+  const iRaw = raw.rawIntensity;
+  const eRaw = raw.rawEffort;
 
-  const iRaw = snapshot.intensity;
-  const eRaw = snapshot.effort;
-  state.smoothedRms = state.smoothedRms * 0.86 + iRaw * 0.14;
+  // Slow session baseline (typical “breathing” level) — not aggressive normalization
+  state.baselineRawIntensity = state.baselineRawIntensity * 0.9992 + iRaw * 0.0008;
+  state.baselineRawEffort = state.baselineRawEffort * 0.9992 + eRaw * 0.0008;
+  state.peakRawIntensity = Math.max(state.peakRawIntensity * 0.9995, iRaw);
 
-  // Adaptive normalization so low-level recordings still show dynamic behavior.
-  state.dynamicFloor = state.dynamicFloor * 0.995 + (state.smoothedRms / 100) * 0.005;
-  const targetCeil = Math.max(state.dynamicFloor + 0.18, (iRaw + eRaw) / 200 + 0.08);
-  state.dynamicCeil = state.dynamicCeil * 0.985 + targetCeil * 0.015;
-  const range = Math.max(0.08, state.dynamicCeil - state.dynamicFloor);
+  // RMS statistics: apnea/hypopnea must use waveform energy, not iRaw (spectral bias lifts “silent” iRaw)
+  state.rmsBaseline = state.rmsBaseline * 0.999 + raw.rms * 0.001;
+  if (raw.rms < state.rmsQuietFloor * 1.55) {
+    state.rmsQuietFloor = state.rmsQuietFloor * 0.9 + raw.rms * 0.1;
+  } else {
+    state.rmsQuietFloor = state.rmsQuietFloor * 0.9996 + raw.rms * 0.0004;
+  }
+  state.rmsQuietFloor = Math.max(0.002, Math.min(state.rmsQuietFloor, 0.12));
 
-  const i = clamp01((iRaw / 100 - state.dynamicFloor) / range) * 100;
-  const e = clamp01((eRaw / 100 - state.dynamicFloor) / range) * 100;
-  snapshot.intensity = Math.round((i * 0.7 + Math.abs(i - state.prevIntensity) * 0.6) * 10) / 10;
-  snapshot.effort = Math.round((e * 0.75 + Math.abs(e - state.prevEffort) * 0.55) * 10) / 10;
+  // Noise floor: tracks quiet moments (drops fast, rises very slowly)
+  if (iRaw < state.noiseFloorRaw * 1.4) {
+    state.noiseFloorRaw = state.noiseFloorRaw * 0.92 + iRaw * 0.08;
+  } else {
+    state.noiseFloorRaw = state.noiseFloorRaw * 0.9997 + iRaw * 0.0003;
+  }
+  state.noiseFloorRaw = Math.max(4, Math.min(state.noiseFloorRaw, 55));
 
-  // Track moving baseline to define 50% reduction criterion for hypopnea.
-  state.baselineIntensity = state.baselineIntensity * 0.992 + snapshot.intensity * 0.008;
-  state.baselineEffort = state.baselineEffort * 0.992 + snapshot.effort * 0.008;
+  // Display snapshot: light smoothing only (gauges), independent of classification
+  const iDisp =
+    snapshot.intensity * 0.35 +
+    iRaw * 0.45 +
+    Math.abs(iRaw - state.prevIntensityRaw) * 8 * 0.2;
+  const eDisp =
+    snapshot.effort * 0.35 + eRaw * 0.45 + Math.abs(eRaw - state.prevEffortRaw) * 6 * 0.2;
+  snapshot.intensity = Math.round(Math.min(100, Math.max(0, iDisp)) * 10) / 10;
+  snapshot.effort = Math.round(Math.min(100, Math.max(0, eDisp)) * 10) / 10;
+  state.prevIntensityRaw = iRaw;
+  state.prevEffortRaw = eRaw;
 
-  state.prevIntensity = snapshot.intensity;
-  state.prevEffort = snapshot.effort;
-
-  const flux = Math.abs(snapshot.intensity - state.prevRms);
-  state.smoothedFlux = state.smoothedFlux * 0.8 + flux * 0.2;
-  state.prevRms = snapshot.intensity;
   if (state.lastSwitchCooldown > 0) state.lastSwitchCooldown -= 1;
 
-  const completeSilence =
-    snapshot.intensity < t.apneaSilenceIntensityMax &&
-    snapshot.effort < 22 &&
-    tonality < 0.28;
-  const halfReduction =
-    snapshot.intensity < state.baselineIntensity * 0.5 &&
-    snapshot.effort < state.baselineEffort * 0.7 &&
-    snapshot.intensity < t.hypopneaIntensityMax;
+  // --- Apnea: sustained near-zero **RMS** (iRaw alone stays high from spectral leakage when RMS is flat)
+  const rmsVsQuiet = raw.rms < Math.max(state.rmsQuietFloor * 2.8, 0.004);
+  const rmsVsTypical = raw.rms < state.rmsBaseline * 0.14;
+  const rmsSilent = raw.rms < 0.038;
+  const silenceAbsolute =
+    rmsSilent && (rmsVsQuiet || rmsVsTypical) && eRaw < 36 && (tonality < 0.48 || raw.rms < 0.022);
+  const silenceRelative = raw.rms < 0.05 && raw.rms < state.rmsBaseline * 0.2 && iRaw < state.baselineRawIntensity * 0.42;
+  const isQuiet = silenceAbsolute || silenceRelative;
 
-  state.apneaSamples = completeSilence ? state.apneaSamples + 1 : 0;
-  state.hypopneaSamples = halfReduction ? state.hypopneaSamples + 1 : 0;
+  if (isQuiet) {
+    state.apneaSamples += 1;
+    state.apneaGraceLeft = 3;
+  } else if (state.apneaGraceLeft > 0) {
+    state.apneaGraceLeft -= 1;
+  } else {
+    state.apneaSamples = 0;
+  }
+
+  // --- Hypopnea: reduced flow — above apnea band, clearly below session typical (RMS-based band)
+  const hypoLowerRms = Math.max(state.rmsQuietFloor * 2.2, 0.006);
+  const hypoUpperRms = state.rmsBaseline * 0.48;
+  const hypoCandidate =
+    raw.rms > hypoLowerRms &&
+    raw.rms < hypoUpperRms &&
+    raw.rms < 0.11 &&
+    iRaw < t.hypopneaIntensityMax + 32 &&
+    !isQuiet;
+  state.hypopneaSamples = hypoCandidate ? state.hypopneaSamples + 1 : 0;
 
   if (state.apneaSamples >= apneaMinSamples) {
     state.lastEvent = "apnea";
-    state.lastSwitchCooldown = 6;
+    state.lastSwitchCooldown = 8;
     return "apnea";
   }
-  if (state.hypopneaSamples >= hypopneaMinSamples && state.apneaSamples < apneaMinSamples) {
+  if (
+    state.hypopneaSamples >= hypopneaMinSamples &&
+    state.apneaSamples < Math.floor(apneaMinSamples * 0.35)
+  ) {
     state.lastEvent = "hypopnea";
-    state.lastSwitchCooldown = 4;
+    state.lastSwitchCooldown = 5;
     return "hypopnea";
   }
 
-  if (state.lastSwitchCooldown <= 0) {
-    const best = matchSimilarityCategory(snapshot.intensity, snapshot.effort, tonality);
-    let chosen = best.type as EventType;
-
-    // Hard safety gates to keep categories medically sensible.
-    if (chosen === "loud_snore" && snapshot.intensity < loudMin) chosen = "moderate_snore";
-    if (chosen === "moderate_snore" && snapshot.intensity < moderateMin) chosen = "mild_snore";
-    if (chosen === "mild_snore" && snapshot.intensity < mildMin) {
-      chosen =
-        snapshot.effort > t.difficultBreathingEffortMin ? "difficult_breathing" : "normal_breathing";
-    }
-    if (chosen === "normal_breathing" && snapshot.intensity > normalMax + 8) {
-      chosen = snapshot.intensity >= moderateMin ? "moderate_snore" : "mild_snore";
-    }
-
-    state.lastEvent = chosen;
-    state.lastSwitchCooldown = chosen === "normal_breathing" ? 0 : 2;
-    return chosen;
+  // During post-event cooldown, keep last label (fixes “everything becomes normal” bug)
+  if (state.lastSwitchCooldown > 0) {
+    return state.lastEvent;
   }
 
-  state.lastEvent = "normal_breathing";
-  return "normal_breathing";
-}
+  const strictSnore = isStrictSnoreSpectrum(tonality, raw.lowRatio, raw.zcrNorm);
+  let chosen: EventType = "normal_breathing";
 
+  if (eRaw > t.difficultBreathingEffortMin && iRaw < t.mildSnoreMin - 4 && !strictSnore) {
+    chosen = "difficult_breathing";
+  } else if (strictSnore && iRaw >= t.loudSnoreMin) {
+    chosen = "loud_snore";
+  } else if (strictSnore && iRaw >= t.moderateSnoreMin) {
+    chosen = "moderate_snore";
+  } else if (strictSnore && iRaw >= t.mildSnoreMin) {
+    chosen = "mild_snore";
+  } else if (!strictSnore && iRaw <= t.normalMax + 24) {
+    chosen = "normal_breathing";
+  } else if (!strictSnore && iRaw < t.moderateSnoreMin) {
+    chosen = "normal_breathing";
+  } else if (!strictSnore && eRaw > t.difficultBreathingEffortMin - 6) {
+    chosen = "difficult_breathing";
+  } else if (iRaw > t.mildSnoreMin - 8) {
+    chosen = strictSnore ? "mild_snore" : "difficult_breathing";
+  }
+
+  state.lastEvent = chosen;
+  state.lastSwitchCooldown = chosen === "normal_breathing" ? 0 : 1;
+  return chosen;
+}
