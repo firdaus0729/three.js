@@ -43,25 +43,28 @@ function classifyEvent(
   const snoreWave = Math.sin(breathPhase * 0.8);
   const isPeak = snoreWave > 0.65;
 
-  if (state.interruptionCooldown <= 0 && intensity < 22 && effort > 55) {
+  if (state.interruptionCooldown <= 0 && intensity < 14 && effort < 30) {
     state.interruptionCooldown = 8;
-    return "breathing_interruption";
+    return "apnea";
+  }
+  if (state.interruptionCooldown <= 0 && intensity < 26 && effort < 42) {
+    return "hypopnea";
   }
 
-  if (intensity > 72 && effort > 60 && isPeak) {
-    return "heavy_snore";
+  if (intensity > 78 && effort > 60 && isPeak) {
+    return "loud_snore";
   }
-  if (intensity > 48 && intensity <= 72 && snoreWave > 0.2) {
-    return "slow_snore";
+  if (intensity > 60 && intensity <= 78 && snoreWave > 0.2) {
+    return "moderate_snore";
+  }
+  if (intensity > 45 && snoreWave > -0.1) {
+    return "mild_snore";
+  }
+  if (effort > 64 && intensity < 45) {
+    return "difficult_breathing";
   }
   if (intensity < 35 && effort < 45) {
     return "normal_breathing";
-  }
-  if (effort > 65) {
-    return "heavy_snore";
-  }
-  if (intensity > 55) {
-    return "slow_snore";
   }
   return "normal_breathing";
 }

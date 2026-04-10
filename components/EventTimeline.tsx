@@ -21,20 +21,35 @@ const typeStyles: Record<
     dot: "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]",
     badge: "text-emerald-300/90 bg-emerald-500/15 border-emerald-500/25",
   },
-  slow_snore: {
+  difficult_breathing: {
+    bar: "from-sky-500/40 to-sky-500/10",
+    dot: "bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.45)]",
+    badge: "text-sky-200/90 bg-sky-500/15 border-sky-500/25",
+  },
+  mild_snore: {
     bar: "from-amber-500/40 to-amber-500/5",
     dot: "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.45)]",
     badge: "text-amber-200/90 bg-amber-500/15 border-amber-500/25",
   },
-  heavy_snore: {
+  moderate_snore: {
     bar: "from-orange-500/45 to-red-500/10",
     dot: "bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.5)]",
     badge: "text-orange-200/90 bg-orange-500/15 border-orange-500/30",
   },
-  breathing_interruption: {
+  loud_snore: {
+    bar: "from-red-500/45 to-rose-700/20",
+    dot: "bg-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.55)]",
+    badge: "text-rose-200/90 bg-rose-500/15 border-rose-500/30",
+  },
+  apnea: {
     bar: "from-red-500/50 to-red-900/20",
     dot: "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.55)]",
     badge: "text-red-200/90 bg-red-500/15 border-red-500/30",
+  },
+  hypopnea: {
+    bar: "from-fuchsia-500/45 to-purple-900/20",
+    dot: "bg-fuchsia-400 shadow-[0_0_12px_rgba(232,121,249,0.5)]",
+    badge: "text-fuchsia-200/90 bg-fuchsia-500/15 border-fuchsia-500/30",
   },
 };
 

@@ -35,11 +35,13 @@ export function BioSphere() {
   });
 
   const alertBoost =
-    eventType === "breathing_interruption"
+    eventType === "apnea"
       ? 0.26
-      : eventType === "heavy_snore"
+      : eventType === "hypopnea"
+        ? 0.2
+        : eventType === "loud_snore"
         ? 0.14
-        : eventType === "slow_snore"
+        : eventType === "moderate_snore"
           ? 0.08
           : 0;
 

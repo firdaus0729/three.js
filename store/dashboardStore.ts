@@ -81,10 +81,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   lastTickMs: 750,
   sim: createInitialSimulation(),
   eventCounts: {
-    heavy_snore: 0,
-    slow_snore: 0,
+    loud_snore: 0,
+    moderate_snore: 0,
+    mild_snore: 0,
+    difficult_breathing: 0,
     normal_breathing: 0,
-    breathing_interruption: 0,
+    apnea: 0,
+    hypopnea: 0,
   },
 
   tickSimulation: () => {
@@ -140,10 +143,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       lastTickMs: 750,
       sim: createInitialSimulation(),
       eventCounts: {
-        heavy_snore: 0,
-        slow_snore: 0,
+        loud_snore: 0,
+        moderate_snore: 0,
+        mild_snore: 0,
+        difficult_breathing: 0,
         normal_breathing: 0,
-        breathing_interruption: 0,
+        apnea: 0,
+        hypopnea: 0,
       },
     }),
 
@@ -164,10 +170,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       playbackOffsetMs: 0,
       isPlaying: false,
       eventCounts: {
-        heavy_snore: 0,
-        slow_snore: 0,
+        loud_snore: 0,
+        moderate_snore: 0,
+        mild_snore: 0,
+        difficult_breathing: 0,
         normal_breathing: 0,
-        breathing_interruption: 0,
+        apnea: 0,
+        hypopnea: 0,
       },
     }),
 
@@ -176,7 +185,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const safeOffset = Math.max(0, Math.min(offsetMs, s.mediaDurationMs || Number.MAX_SAFE_INTEGER));
     const id = `evt-${++eventId}`;
     const newEvent: TimelineEvent = { id, offsetMs: safeOffset, type, snapshot: { ...snapshot } };
-    const nextEvents = [...s.events, newEvent].slice(-2500);
+    const nextEvents = [...s.events, newEvent];
     set({
       intensity: snapshot.intensity,
       effort: snapshot.effort,

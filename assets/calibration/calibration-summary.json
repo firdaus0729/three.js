@@ -1,0 +1,330 @@
+{
+  "apnea": {
+    "count": 6,
+    "meanIntensityAvg": 60,
+    "meanIntensityStd": 3.47,
+    "peakIntensityAvg": 99.81,
+    "samples": [
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/1 APNEA & STRONG SNORING.mp3",
+        "category": "apnea",
+        "meanDb": -25.9,
+        "maxDb": 0,
+        "meanIntensity": 56.833333333333336,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/2 APNEA & STRONG SNORING.mp3",
+        "category": "apnea",
+        "meanDb": -20.9,
+        "maxDb": -0.4,
+        "meanIntensity": 65.16666666666667,
+        "peakIntensity": 99.33333333333334
+      },
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/3 APNEA & STRONG SNORING.mp3",
+        "category": "apnea",
+        "meanDb": -26.7,
+        "maxDb": 0,
+        "meanIntensity": 55.49999999999999,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/4 APNEA & STRONG SNORING.mp3",
+        "category": "apnea",
+        "meanDb": -21.8,
+        "maxDb": 0,
+        "meanIntensity": 63.66666666666667,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/5 APNEA & STRONG SNORING Î_Î_Î¥Î¡Î_Î¥Î_Î_Î£ Î Î_Î_Î_Î_Î_Î©Î¤Î_Î£-Î_Î Î_Î_Î_Î_.wma",
+        "category": "apnea",
+        "meanDb": -23.9,
+        "maxDb": -0.3,
+        "meanIntensity": 60.16666666666667,
+        "peakIntensity": 99.5
+      },
+      {
+        "file": "assets/calibration/APNEA & STRONG SNORING/6 APNEA & STRONG SNORING Î_Î_Î_Î_Î_Î£ Î_Î_Î©Î¡Î_Î_Î£-Î_Î Î_Î_Î_Î_ 1..mp3",
+        "category": "apnea",
+        "meanDb": -24.8,
+        "maxDb": 0,
+        "meanIntensity": 58.666666666666664,
+        "peakIntensity": 100
+      }
+    ]
+  },
+  "hypopnea": {
+    "count": 5,
+    "meanIntensityAvg": 54.9,
+    "meanIntensityStd": 4.84,
+    "peakIntensityAvg": 98.8,
+    "samples": [
+      {
+        "file": "assets/calibration/Hypopnea/10 Hypopnea.mp3",
+        "category": "hypopnea",
+        "meanDb": -23.7,
+        "maxDb": 0,
+        "meanIntensity": 60.5,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Hypopnea/3 Hypopnea.mp3",
+        "category": "hypopnea",
+        "meanDb": -30.5,
+        "maxDb": -1.6,
+        "meanIntensity": 49.166666666666664,
+        "peakIntensity": 97.33333333333333
+      },
+      {
+        "file": "assets/calibration/Hypopnea/4 Hypopnea.mp3",
+        "category": "hypopnea",
+        "meanDb": -25.2,
+        "maxDb": -2,
+        "meanIntensity": 57.99999999999999,
+        "peakIntensity": 96.66666666666667
+      },
+      {
+        "file": "assets/calibration/Hypopnea/7 Hypopnea.mp3",
+        "category": "hypopnea",
+        "meanDb": -25.3,
+        "maxDb": 0,
+        "meanIntensity": 57.833333333333336,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Hypopnea/8 Hypopnea.mp3",
+        "category": "hypopnea",
+        "meanDb": -30.6,
+        "maxDb": 0,
+        "meanIntensity": 49,
+        "peakIntensity": 100
+      }
+    ]
+  },
+  "mild_snore": {
+    "count": 5,
+    "meanIntensityAvg": 53.43,
+    "meanIntensityStd": 11.33,
+    "peakIntensityAvg": 87.8,
+    "samples": [
+      {
+        "file": "assets/calibration/Low Snoring/1 Low Snoring.mp3",
+        "category": "mild_snore",
+        "meanDb": -33.6,
+        "maxDb": -12.2,
+        "meanIntensity": 44,
+        "peakIntensity": 79.66666666666666
+      },
+      {
+        "file": "assets/calibration/Low Snoring/2 Low Snoring.mp3",
+        "category": "mild_snore",
+        "meanDb": -35.9,
+        "maxDb": -12.5,
+        "meanIntensity": 40.166666666666664,
+        "peakIntensity": 79.16666666666666
+      },
+      {
+        "file": "assets/calibration/Low Snoring/6 Low Snoring.mp3",
+        "category": "mild_snore",
+        "meanDb": -19.6,
+        "maxDb": 0,
+        "meanIntensity": 67.33333333333333,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Low Snoring/8 Low Snoring.mp3",
+        "category": "mild_snore",
+        "meanDb": -30.4,
+        "maxDb": -11.7,
+        "meanIntensity": 49.333333333333336,
+        "peakIntensity": 80.5
+      },
+      {
+        "file": "assets/calibration/Low Snoring/9 Low Snoring.mp3",
+        "category": "mild_snore",
+        "meanDb": -20.2,
+        "maxDb": -0.2,
+        "meanIntensity": 66.33333333333333,
+        "peakIntensity": 99.66666666666666
+      }
+    ]
+  },
+  "moderate_snore": {
+    "count": 5,
+    "meanIntensityAvg": 64.97,
+    "meanIntensityStd": 4.37,
+    "peakIntensityAvg": 99.53,
+    "samples": [
+      {
+        "file": "assets/calibration/Moderate Snoring/1 Moderate Snoring.mp3",
+        "category": "moderate_snore",
+        "meanDb": -17.8,
+        "maxDb": 0,
+        "meanIntensity": 70.33333333333334,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Moderate Snoring/3 Moderate Snoring.mp3",
+        "category": "moderate_snore",
+        "meanDb": -21.9,
+        "maxDb": -1,
+        "meanIntensity": 63.5,
+        "peakIntensity": 98.33333333333333
+      },
+      {
+        "file": "assets/calibration/Moderate Snoring/4 Moderate Snoring.mp3",
+        "category": "moderate_snore",
+        "meanDb": -20.6,
+        "maxDb": 0,
+        "meanIntensity": 65.66666666666666,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Moderate Snoring/5 Moderate Snoring.mp3",
+        "category": "moderate_snore",
+        "meanDb": -19.3,
+        "maxDb": 0,
+        "meanIntensity": 67.83333333333333,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/Moderate Snoring/6 Moderate Snoring.mp3",
+        "category": "moderate_snore",
+        "meanDb": -25.5,
+        "maxDb": -0.4,
+        "meanIntensity": 57.49999999999999,
+        "peakIntensity": 99.33333333333334
+      }
+    ]
+  },
+  "normal": {
+    "count": 8,
+    "meanIntensityAvg": 27.83,
+    "meanIntensityStd": 3.61,
+    "peakIntensityAvg": 58.9,
+    "samples": [
+      {
+        "file": "assets/calibration/NORMAL BREATH/1 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -42.3,
+        "maxDb": -27.4,
+        "meanIntensity": 29.500000000000004,
+        "peakIntensity": 54.333333333333336
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/2 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -46.1,
+        "maxDb": -28,
+        "meanIntensity": 23.166666666666664,
+        "peakIntensity": 53.333333333333336
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/3 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -44.8,
+        "maxDb": -25.2,
+        "meanIntensity": 25.333333333333336,
+        "peakIntensity": 57.99999999999999
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/4 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -44.2,
+        "maxDb": -21.9,
+        "meanIntensity": 26.333333333333332,
+        "peakIntensity": 63.5
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/5 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -43.6,
+        "maxDb": -27.3,
+        "meanIntensity": 27.333333333333332,
+        "peakIntensity": 54.50000000000001
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/6 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -44.7,
+        "maxDb": -22.9,
+        "meanIntensity": 25.499999999999996,
+        "peakIntensity": 61.83333333333334
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/7 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -42.1,
+        "maxDb": -23.9,
+        "meanIntensity": 29.83333333333333,
+        "peakIntensity": 60.16666666666667
+      },
+      {
+        "file": "assets/calibration/NORMAL BREATH/8 NORMAL BREATH.mp3",
+        "category": "normal",
+        "meanDb": -38.6,
+        "maxDb": -20.7,
+        "meanIntensity": 35.666666666666664,
+        "peakIntensity": 65.49999999999999
+      }
+    ]
+  },
+  "loud_snore": {
+    "count": 6,
+    "meanIntensityAvg": 64.36,
+    "meanIntensityStd": 2.76,
+    "peakIntensityAvg": 99.92,
+    "samples": [
+      {
+        "file": "assets/calibration/STRONG SNORING/1 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -21.3,
+        "maxDb": 0,
+        "meanIntensity": 64.5,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/STRONG SNORING/3 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -19.3,
+        "maxDb": 0,
+        "meanIntensity": 67.83333333333333,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/STRONG SNORING/6 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -22.6,
+        "maxDb": 0,
+        "meanIntensity": 62.33333333333333,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/STRONG SNORING/7 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -19.1,
+        "maxDb": 0,
+        "meanIntensity": 68.16666666666666,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/STRONG SNORING/8 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -23.3,
+        "maxDb": 0,
+        "meanIntensity": 61.16666666666667,
+        "peakIntensity": 100
+      },
+      {
+        "file": "assets/calibration/STRONG SNORING/9 STRONG SNORING.mp3",
+        "category": "loud_snore",
+        "meanDb": -22.7,
+        "maxDb": -0.3,
+        "meanIntensity": 62.16666666666666,
+        "peakIntensity": 99.5
+      }
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useMemo, useState } from "react";
+import { exportCsvReport, exportPdfReport } from "@/lib/reportExport";
 import { EVENT_LABELS } from "@/lib/types";
 import { useDashboardStore } from "@/store/dashboardStore";
 
@@ -23,6 +24,7 @@ function formatDuration(ms: number) {
 
 export function AnalysisControlPanel({ onFileSelected }: AnalysisControlPanelProps) {
   const [fileName, setFileName] = useState<string>("");
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const sourceMode = useDashboardStore((s) => s.sourceMode);
   const analysisStatus = useDashboardStore((s) => s.analysisStatus);
   const analysisError = useDashboardStore((s) => s.analysisError);
@@ -31,6 +33,7 @@ export function AnalysisControlPanel({ onFileSelected }: AnalysisControlPanelPro
   const analysisProgress = useDashboardStore((s) => s.analysisProgress);
   const playbackRate = useDashboardStore((s) => s.playbackRate);
   const eventCounts = useDashboardStore((s) => s.eventCounts);
+  const events = useDashboardStore((s) => s.events);
   const elapsedMs = useDashboardStore((s) => s.elapsedMs);
   const isPlaying = useDashboardStore((s) => s.isPlaying);
   const setPlaybackRate = useDashboardStore((s) => s.setPlaybackRate);
@@ -43,6 +46,7 @@ export function AnalysisControlPanel({ onFileSelected }: AnalysisControlPanelPro
     () => Object.values(eventCounts).reduce((acc, v) => acc + v, 0),
     [eventCounts]
   );
+  const canExport = sourceMode === "media" && events.length > 0;
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
@@ -51,6 +55,40 @@ export function AnalysisControlPanel({ onFileSelected }: AnalysisControlPanelPro
     if (f) {
       setSourceMode("media");
       setAnalysisStatus("idle");
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!canExport || isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      let snapshotDataUrl: string | undefined;
+      const root = document.getElementById("dashboard-root");
+      if (root) {
+        try {
+          const html2canvas = (await import("html2canvas")).default;
+          const canvas = await html2canvas(root, {
+            backgroundColor: "#0a0e14",
+            scale: Math.min(2, window.devicePixelRatio || 1.5),
+            useCORS: true,
+            logging: false,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight,
+          });
+          snapshotDataUrl = canvas.toDataURL("image/png");
+        } catch (error) {
+          console.warn("Dashboard snapshot capture failed; exporting PDF without cover image.", error);
+        }
+      }
+      exportPdfReport(events, {
+        clipName: mediaName,
+        durationMs: mediaDurationMs || elapsedMs,
+        generatedAt: new Date(),
+        eventCounts,
+        dashboardSnapshotDataUrl: snapshotDataUrl,
+      });
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -104,6 +142,29 @@ export function AnalysisControlPanel({ onFileSelected }: AnalysisControlPanelPro
               className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-white/10"
             >
               Back to simulation
+            </button>
+            <button
+              type="button"
+              disabled={!canExport}
+              onClick={() =>
+                exportCsvReport(events, {
+                  clipName: mediaName,
+                  durationMs: mediaDurationMs || elapsedMs,
+                  generatedAt: new Date(),
+                  eventCounts,
+                })
+              }
+              className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              disabled={!canExport || isExportingPdf}
+              onClick={handleExportPdf}
+              className="rounded-lg border border-fuchsia-500/35 bg-fuchsia-500/10 px-3 py-1.5 text-xs font-medium text-fuchsia-100 transition hover:bg-fuchsia-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
             </button>
           </div>
 

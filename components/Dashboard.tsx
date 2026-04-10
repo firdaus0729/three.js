@@ -51,7 +51,10 @@ function DashboardBody() {
 
 export function Dashboard() {
   return (
-    <main className="min-h-screen bg-[#0a0e14] bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(34,211,238,0.06),transparent)]">
+    <main
+      id="dashboard-root"
+      className="min-h-screen bg-[#0a0e14] bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(34,211,238,0.06),transparent)]"
+    >
       <DashboardBody />
     </main>
   );

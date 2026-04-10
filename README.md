@@ -34,7 +34,8 @@ npm run preview
 |------|------|
 | `src/` | Vite entrypoint |
 | `components/` | Gauges, 3D viewport, timeline, playback UI, dashboard shell |
-| `lib/` | Simulation math, shared types, semantic colors |
+| `lib/` | Simulation math, calibration profile, shared types, semantic colors |
+| `assets/calibration/` | Reference audio clips per category (used to regenerate thresholds) |
 | `hooks/` | Simulation loop, eased gauge values, playback scrubbing |
 | `store/` | Zustand store for live metrics and events |
 
@@ -47,8 +48,10 @@ npm run preview
 5. Watch:
    - circular gauges (`Intensity`, `Effort`)
    - 3D sphere response
-   - event timeline (`Heavy snore`, `Slow snore`, `Breathing interruption`, `Normal breathing`)
+   - event timeline (normal / difficult breathing / mild–moderate–loud snore / hypopnea / apnea)
 6. Click any event to inspect timestamp and metric snapshot.
+7. After analysis, click **Export CSV** or **Export PDF** for full-clip reporting output.
+   - PDF export automatically includes a dashboard snapshot cover section.
 
 ### Notes for 6h+ recordings
 
@@ -56,3 +59,15 @@ npm run preview
 - Some formats (especially legacy WMV/WMA variants) may upload but fail to decode in-browser; convert to WAV/MP4 for guaranteed playback.
 - Keep the tab active while running long analysis sessions.
 - This is a **POC classifier**, not a medical diagnosis system.
+
+## Calibration from client reference clips
+
+Place labeled samples under `assets/calibration/` using the same folder names as your pack (e.g. `NORMAL BREATH`, `Low Snoring`, `Moderate Snoring`, `STRONG SNORING`, `Hypopnea`, `APNEA & STRONG SNORING`).
+
+Then regenerate thresholds (writes `lib/calibrationProfile.ts` and `assets/calibration/calibration-summary.json`):
+
+```bash
+npm run calibrate
+```
+
+Re-run this whenever you add or replace calibration audio. The dashboard classifier reads `CALIBRATION_PROFILE` at build time.

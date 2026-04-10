@@ -1,8 +1,11 @@
 export type EventType =
-  | "heavy_snore"
-  | "slow_snore"
+  | "loud_snore"
+  | "moderate_snore"
+  | "mild_snore"
+  | "difficult_breathing"
   | "normal_breathing"
-  | "breathing_interruption";
+  | "apnea"
+  | "hypopnea";
 
 export interface MetricSnapshot {
   intensity: number;
@@ -21,8 +24,11 @@ export type DataSourceMode = "simulation" | "media";
 export type AnalysisStatus = "idle" | "loading" | "running" | "completed" | "error";
 
 export const EVENT_LABELS: Record<EventType, string> = {
-  heavy_snore: "Heavy snore",
-  slow_snore: "Slow snore",
+  loud_snore: "Loud snore",
+  moderate_snore: "Moderate snore",
+  mild_snore: "Mild snore",
+  difficult_breathing: "Difficult breathing",
   normal_breathing: "Normal breathing",
-  breathing_interruption: "Breathing interruption",
+  apnea: "Apnea",
+  hypopnea: "Hypopnea",
 };
